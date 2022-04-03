@@ -31,25 +31,19 @@ enum { RXCIF = 0x80, TXCIF= 0x40, DREIF = 0x20, RXSIF = 0x10, ISFIF = 8,
 
 enum { RXCIE = RXCIF, TXCIE = TXCIF, DREIE = DREIF };
 
-static const uint8_t *txBuf;
-static const uint8_t *txBufEnd;
 static volatile bool txBusy;
 
 void serialInit(unsigned long baud)
 {
-  cli();
   PORTC.DIRSET = PIN0_bm;
   PORTC.DIRCLR = PIN1_bm;
   // Set 16 bit baud rate register pair.
   USART1.BAUD = (uint16_t)BAUDGEN(baud);
   // Set operating mode.
   USART1.CTRLC = ASYNC | PARITY_DISABLED | STOPBIT_1 | BIT8;
-  // Enable desired UART interrupts.
-  USART1.CTRLA = DREIE;
   // Enable serial
   USART1.CTRLB |= TXEN;
   txBusy = false;
-  sei();
 }
 
 void serialSendByte(uint8_t data)
@@ -63,27 +57,14 @@ void serialSendBuff(const uint8_t *data, uint16_t length)
   if (length == 0) {
 	return;
   }
-
-  serialWaitTx();
-  txBusy = true;
-  txBuf = data;
-  txBufEnd = &data[length];
-  USART1.STATUS |= DREIF;
-
+  for (uint16_t i = 0; i < length; ++i) {
+	serialSendByte(data[i]);
+  }
 }
 
 void serialWaitTx(void)
 {
   while (txBusy){
 	_delay_us(1);
-  }
-}
-
-ISR(USART1_DRE_vect)
-{
-  if (txBuf < txBufEnd) {
-	USART1.TXDATAL = *txBuf++;
-  } else {
-	txBusy = false;
   }
 }
