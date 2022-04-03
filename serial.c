@@ -46,7 +46,7 @@ void serialInit(unsigned long baud)
   // Set operating mode.
   USART1.CTRLC = ASYNC | PARITY_DISABLED | STOPBIT_1 | BIT8;
   // Enable desired UART interrupts.
-  USART1.CTRLA = DREIE;
+  //USART1.CTRLA = DREIE;
   // Enable serial
   USART1.CTRLB |= TXEN;
   txBusy = false;
