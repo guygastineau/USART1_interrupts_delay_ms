@@ -26,6 +26,7 @@ int main (void)
   setClockControl();
   serialInit(115200);
   PORTA.DIRSET |= PIN7_bm;
+  sei();
   while (1) {
 	serialSendBuff(hello, 13);
 	serialWaitTx();
