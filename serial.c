@@ -45,8 +45,6 @@ void serialInit(unsigned long baud)
   PORTC.DIRCLR = PIN1_bm;
   // Enable serial
   USART1.CTRLB |= TXEN | RXEN;
-  // Enable desired UART interrupts.
-  USART1.CTRLA = DREIE;
   txBusy = false;
   sei();
 }
@@ -67,6 +65,8 @@ void serialSendBuff(const uint8_t *data, uint16_t length)
   txBusy = true;
   txBuf = data;
   txBufEnd = &data[length];
+  // Enable desired UART interrupts.
+  USART1.CTRLA = DREIE;
   USART1.STATUS = DREIF;
 
 }
@@ -83,6 +83,8 @@ ISR(USART1_DRE_vect)
   if (txBuf < txBufEnd) {
 	USART1.TXDATAL = *txBuf++;
   } else {
+	// Disable DRE interrupt
+	USART1.CTRLA &= ~DREIE;
 	txBusy = false;
   }
 }
