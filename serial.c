@@ -38,16 +38,15 @@ static volatile bool txBusy;
 void serialInit(unsigned long baud)
 {
   cli();
-  PORTC.DIRSET = PIN0_bm;
-  PORTC.DIRCLR = PIN1_bm;
-  // Set 16 bit baud rate register pair.
   USART1.BAUD = (uint16_t)BAUDGEN(baud);
   // Set operating mode.
   USART1.CTRLC = ASYNC | PARITY_DISABLED | STOPBIT_1 | BIT8;
+  PORTC.DIRSET = PIN0_bm;
+  PORTC.DIRCLR = PIN1_bm;
+  // Enable serial
+  USART1.CTRLB |= TXEN | RXEN;
   // Enable desired UART interrupts.
   USART1.CTRLA = DREIE;
-  // Enable serial
-  USART1.CTRLB |= TXEN;
   txBusy = false;
   sei();
 }
@@ -68,14 +67,14 @@ void serialSendBuff(const uint8_t *data, uint16_t length)
   txBusy = true;
   txBuf = data;
   txBufEnd = &data[length];
-  USART1.STATUS |= DREIF;
+  USART1.STATUS = DREIF;
 
 }
 
 void serialWaitTx(void)
 {
   while (txBusy){
-	_delay_us(1);
+	_delay_ms(1);
   }
 }
 
